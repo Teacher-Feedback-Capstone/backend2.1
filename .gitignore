@@ -1,2 +1,4 @@
 .env
-/src/tmp/*node_modules/
+/src/tmp/*
+node_modules/
+/tmp/*
