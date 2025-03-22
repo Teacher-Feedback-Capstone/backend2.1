@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 import os
 from collections import defaultdict
 
+from grader import grader
+
 # --------------------- Model Loader (Singleton) ---------------------
 class ModelLoader:
     """Singleton class to load ASR & Speaker Diarization models once."""
@@ -20,6 +22,7 @@ class ModelLoader:
     load_dotenv()
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
+    g = grader(api_key=os.getenv("GRADER_API_KEY"))
 
     @classmethod
     def get_asr_model(cls):
@@ -129,7 +132,8 @@ while True:
         else:
             response = {"transcription": transcript["text"]}
 
-        print(json.dumps(response))
+        results = ModelLoader.g.evaluate(user_input={str(response)})
+        print(json.dumps(results))
         sys.stdout.flush()
 
     except Exception as e:

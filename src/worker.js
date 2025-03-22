@@ -68,26 +68,6 @@ pythonProcess.stderr.on('data', (data) => {
   console.error('❌ Python Error:', data.toString());
 });
 
-// // ✅ Function to Send Requests to Python Process
-// function runTranscription(filePath, diarize = false) {
-//   return new Promise((resolve, reject) => {
-//     pythonProcess.stdin.write(JSON.stringify({ filePath, diarize }) + '\n');
-
-//     pythonProcess.stdout.once('data', (data) => {
-//       try {
-//         const result = JSON.parse(data.toString());
-//         resolve(result);
-//       } catch (error) {
-//         reject(error);
-//       }
-//     });
-
-//     pythonProcess.stderr.once('data', (err) => {
-//       reject(err.toString());
-//     });
-//   });
-// }
-
 import { createInterface } from 'readline';
 
 // Create a readline interface for the persistent Python process stdout

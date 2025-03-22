@@ -3,6 +3,8 @@ const AWS = require('aws-sdk');
 const multer = require('multer');
 const dotenv = require('dotenv');
 const File = require('../models/File');
+const Session = require('../models/Session');
+const Report = require('../models/Report');
 const authMiddleware = require('../middleware/jwtAuth'); // Authentication middleware
 
 // Redis and BullMQ
@@ -34,10 +36,17 @@ const { QueueEvents } = require('bullmq');
 const fileQueueEvents = new QueueEvents('file-processing', { connection: redisConnection });
 
 fileQueueEvents.on('completed', async ({ jobId }) => {
-const job = await fileProcessingQueue.getJob(jobId);
-const result = job.returnvalue;
-console.log(`Job ${jobId} completed with result:`, result);
-  // Then update the DB or notify the client.
+    const job = await fileProcessingQueue.getJob(jobId);
+    const result = job.returnvalue;
+    console.log(`Job ${jobId} completed with result:`, result);
+
+    // Save report metadata in DB
+    const reportId = await Report.create({
+        session_id: jobId,         // or jobId if that's what you need
+        weekly_report_id: null,
+        report_file: result
+      });
+    // Then update the DB or notify the client.
 });
 
 // Multer Configuration (Store files in memory before uploading)
@@ -70,10 +79,20 @@ router.post('/upload', authMiddleware, upload.single('audio'), async (req, res) 
 
         const s3Response = await s3.upload(params).promise();
 
+       
+
         // Add job to queue for processing
-        await fileProcessingQueue.add('processFile', {
+        const job = await fileProcessingQueue.add('processFile', {
             key,
             userId: req.userId,
+        });
+
+         // Save session metadata in DB
+        const sessionId = job.id;
+        await Session.create({
+            sessionId: sessionId,
+            transcription: 'n/a',
+            user_id: req.userId
         });
 
         // Save file metadata in DB
@@ -83,7 +102,9 @@ router.post('/upload', authMiddleware, upload.single('audio'), async (req, res) 
             uploadedBy: req.userId,
         });
 
-        res.status(200).json({ message: 'File uploaded and queued for processing!', fileId });
+        
+
+        res.status(200).json({ message: 'File uploaded and queued for processing!', fileId, sessionId });
     } catch (err) {
         console.error('Upload error:', err);
         res.status(500).json({ message: 'Failed to upload file.' });

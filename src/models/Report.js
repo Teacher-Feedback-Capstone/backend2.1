@@ -1,3 +1,7 @@
+const BaseModel = require('./BaseModel');
+const pool = require('../config/db');
+
+
 class Report extends BaseModel {
     static tableName = 'Report';
     static primaryKey = 'report_id';
