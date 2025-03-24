@@ -14,21 +14,28 @@ class Report extends BaseModel {
       return result.insertId;
     }
     static async findByUserId(userId) {
-      const sql = `SELECT * FROM Report WHERE user_id = ?`;
-      return await this.query(sql, [userId]);
-    }
-    static async findOneByUser(reportId, userId) {
       const sql = `
-        SELECT *
-        FROM Report
-        WHERE report_id = ?
-          AND user_id = ?
-        LIMIT 1
+        SELECT r.*
+        FROM Report r
+        JOIN Session s ON r.session_id = s.session_id
+        WHERE s.user_id = ?
       `;
-      const rows = await this.query(sql, [reportId, userId]);
-      return rows[0] || null;
-    }
+      return await this.query(sql, [userId]);
   }
+  static async findOneByUser(reportId, userId) {
+    const sql = `
+      SELECT r.*
+      FROM Report r
+      JOIN Session s ON r.session_id = s.session_id
+      WHERE r.report_id = ?
+        AND s.user_id = ?
+      LIMIT 1
+    `;
+    const rows = await this.query(sql, [reportId, userId]);
+    return rows[0] || null;
+}
+
+}
 
 
 module.exports = Report;
