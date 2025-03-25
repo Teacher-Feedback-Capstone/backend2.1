@@ -34,10 +34,22 @@ class Report extends BaseModel {
           AND S.user_id = ?
         LIMIT 1
       `;
-      const rows = await this.query(sql, [reportId, userId]);
-      return rows[0] || null;
-    }
+      return await this.query(sql, [userId]);
   }
+  static async findOneByUser(reportId, userId) {
+    const sql = `
+      SELECT r.*
+      FROM Report r
+      JOIN Session s ON r.session_id = s.session_id
+      WHERE r.report_id = ?
+        AND s.user_id = ?
+      LIMIT 1
+    `;
+    const rows = await this.query(sql, [reportId, userId]);
+    return rows[0] || null;
+}
+
+}
 
 
 module.exports = Report;
