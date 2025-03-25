@@ -1,35 +1,34 @@
 // require('dotenv').config();
 // const express = require('express');
-// const mysql = require("mysql")
 // const bodyParser = require('body-parser');
-// const authRoutes = require('./routes/auth'); 
-// // const fileUploadRoutes = require('./routes/file-upload');
+// const authRoutes = require('./routes/auth');
+// const fileUploadRoutes = require('./routes/file-upload')(io);
+// const reportRoutes = require('./routes/report')
+// const bcrypt = require('bcryptjs');
+// const socketIo = require('socket.io');
 
 // const app = express();
+// const io = socketIo(server);
+
+// // Set up Socket.IO connections
+// io.on('connection', (socket) => {
+//     console.log('New client connected');
+  
+//     socket.on('joinRoom', (jobId) => {
+//       socket.join(jobId); // Join a room based on jobId
+//       console.log(`Socket joined room: ${jobId}`);
+//     });
+//   });
+
+// server.listen(3000, () => console.log('Server listening on port 3000'));
 
 // // Middleware
 // app.use(bodyParser.json());
 
-// const db = mysql.createConnection({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-//     port: process.env.DB_PORT,
-//   });
-
-// // Connect to the database
-// db.connect((err) => {
-//     if (err) {
-//       console.error("Error connecting to the database:", err.message);
-//     } else {
-//       console.log("Connected to the MySQL database!");
-//     }
-//   });
-
 // // Routes
 // app.use('/api/auth', authRoutes);
-// // app.use('/api/file-upload', fileUploadRoutes);
+// app.use('/api/file-upload', fileUploadRoutes);
+// app.use('/api/report', reportRoutes);
 
 // const PORT = process.env.PORT || 3000;
 // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
@@ -37,11 +36,25 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const http = require('http');
+const socketModule = require('./config/socket'); // Path to your socket module
 const authRoutes = require('./routes/auth');
 const fileUploadRoutes = require('./routes/file-upload');
-const bcrypt = require('bcryptjs');
+const reportRoutes = require('./routes/report');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketModule.init(server); // Initialize Socket.IO with the server
+
+// Set up Socket.IO connections
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('joinRoom', (jobId) => {
+    socket.join(jobId);
+    console.log(`Socket joined room: ${jobId}`);
+  });
+});
 
 // Middleware
 app.use(bodyParser.json());
@@ -49,6 +62,7 @@ app.use(bodyParser.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/file-upload', fileUploadRoutes);
+app.use('/api/report', reportRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

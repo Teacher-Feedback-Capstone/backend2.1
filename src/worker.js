@@ -76,7 +76,7 @@ const rl = createInterface({
   crlfDelay: Infinity,
 });
 
-function waitForValidJSON(timeout = 30000) {
+function waitForValidJSON(timeout = 120000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       rl.removeListener('line', onLine);
@@ -119,13 +119,17 @@ const worker = new Worker(
     const { key, userId } = job.data;
 
     try {
+      await job.updateProgress(25);
       const filePath = await downloadS3Object(process.env.AWS_BUCKET_NAME, key);
+      await job.updateProgress(50);
 
       // ✅ Transcribe using the persistent Python process
       const transcriptionResult = await runTranscription(filePath, false);
       console.log('📝 Transcription Result:', transcriptionResult);
+      await job.updateProgress(75);
 
       console.log(`✅ Processed Job ${job.id}`);
+      await job.updateProgress(100);
       return transcriptionResult;
     } catch (err) {
       console.error('❌ Error processing job:', err);
@@ -143,3 +147,4 @@ queueEvents.on('completed', ({ jobId }) => {
 queueEvents.on('failed', ({ jobId, failedReason }) => {
   console.log(`Job ${jobId} has failed with reason: ${failedReason}`);
 });
+

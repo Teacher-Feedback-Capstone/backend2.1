@@ -13,16 +13,25 @@ class Report extends BaseModel {
       );
       return result.insertId;
     }
+    // Query reports for a given user by joining with the Session table
     static async findByUserId(userId) {
-      const sql = `SELECT * FROM Report WHERE user_id = ?`;
+      const sql = `
+        SELECT R.*
+        FROM Report R
+        JOIN Session S ON R.session_id = S.session_id
+        WHERE S.user_id = ?
+      `;
       return await this.query(sql, [userId]);
     }
+
+    // Find a specific report for a given user by joining with the Session table
     static async findOneByUser(reportId, userId) {
       const sql = `
-        SELECT *
-        FROM Report
-        WHERE report_id = ?
-          AND user_id = ?
+        SELECT R.*
+        FROM Report R
+        JOIN Session S ON R.session_id = S.session_id
+        WHERE R.report_id = ? 
+          AND S.user_id = ?
         LIMIT 1
       `;
       const rows = await this.query(sql, [reportId, userId]);

@@ -6,6 +6,7 @@ const File = require('../models/File');
 const Session = require('../models/Session');
 const Report = require('../models/Report');
 const authMiddleware = require('../middleware/jwtAuth'); // Authentication middleware
+const { getIO } = require('../config/socket'); // Adjust path if needed
 
 // Redis and BullMQ
 const { Queue } = require('bullmq');
@@ -29,6 +30,7 @@ const redisConnection = new Redis({
     maxRetriesPerRequest: null, // REQUIRED for BullMQ
 });
 
+
 // BullMQ Queue
 const fileProcessingQueue = new Queue('file-processing', { connection: redisConnection });
 
@@ -48,6 +50,15 @@ fileQueueEvents.on('completed', async ({ jobId }) => {
       });
     // Then update the DB or notify the client.
 });
+
+fileQueueEvents.on('progress', async ({ jobId, data }) => {
+    const job = await fileProcessingQueue.getJob(jobId);
+    console.log(`Job ${jobId} progress at:`, data);
+    // You can emit an initial progress update if needed
+    getIO().to(jobId).emit('progressUpdate', { jobId, progress: data });
+    // Then update the DB or notify the client.
+});
+
 
 // Multer Configuration (Store files in memory before uploading)
 const storage = multer.memoryStorage();
