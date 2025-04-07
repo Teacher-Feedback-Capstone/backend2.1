@@ -107,6 +107,7 @@ while True:
 
         data = json.loads(line)
         file_path = data.get("filePath")
+        subject = data.get("subject")
         diarize = data.get("diarize", False)
 
         if not file_path:
@@ -132,7 +133,7 @@ while True:
         else:
             response = {"transcription": transcript["text"]}
 
-        results = ModelLoader.g.evaluate(user_input={str(response)})
+        results = ModelLoader.g.evaluate(user_input={str(response)}, subject=subject)
         print(json.dumps(results))
         sys.stdout.flush()
 

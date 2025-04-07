@@ -70,12 +70,14 @@ router.post('/upload', authMiddleware, upload.single('audio'), async (req, res) 
         console.log('upload request received');
         if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
         if (!req.userId) return res.status(401).json({ message: 'User not authenticated.' });
+        if (!req.body.subject) return res.status(400).json({ message: 'Subject is required.' });
 
         // Log all request data including authorization header
         console.log('Request Headers:', req.headers);
         console.log('Authorization Header:', req.headers.authorization);
         console.log('Request Body:', req.body);
         console.log('Uploaded File:', req.file);
+        console.log('Subject:', req.body.subject);
 
         // Define S3 key (folder + timestamp)
         const key = `${req.body.folder || 'default'}/${Date.now()}_${req.file.originalname}`;
@@ -96,6 +98,7 @@ router.post('/upload', authMiddleware, upload.single('audio'), async (req, res) 
         const job = await fileProcessingQueue.add('processFile', {
             key,
             userId: req.userId,
+            subject: req.body.subject,
         });
 
          // Save session metadata in DB

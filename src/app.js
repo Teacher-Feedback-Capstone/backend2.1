@@ -37,6 +37,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
+const cors = require('cors');
 const socketModule = require('./config/socket'); // Path to your socket module
 const authRoutes = require('./routes/auth');
 const fileUploadRoutes = require('./routes/file-upload');
@@ -58,6 +59,7 @@ io.on('connection', (socket) => {
 
 // Middleware
 app.use(bodyParser.json());
+app.use(cors());
 
 // Routes
 app.use('/api/auth', authRoutes);

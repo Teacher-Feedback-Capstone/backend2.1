@@ -99,9 +99,9 @@ function waitForValidJSON(timeout = 120000) {
   });
 }
 
-function runTranscription(filePath, diarize = false) {
+function runTranscription(filePath, subject, diarize = false) {
   return new Promise((resolve, reject) => {
-    pythonProcess.stdin.write(JSON.stringify({ filePath, diarize }) + '\n');
+    pythonProcess.stdin.write(JSON.stringify({ filePath, subject, diarize }) + '\n');
 
     // Wait until a valid JSON line is received.
     waitForValidJSON()
@@ -116,7 +116,7 @@ const worker = new Worker(
   async (job) => {
     console.log(`🛠️ Processing job ${job.id}...`);
 
-    const { key, userId } = job.data;
+    const { key, userId, subject } = job.data;
 
     try {
       await job.updateProgress(25);
@@ -124,7 +124,7 @@ const worker = new Worker(
       await job.updateProgress(50);
 
       // ✅ Transcribe using the persistent Python process
-      const transcriptionResult = await runTranscription(filePath, false);
+      const transcriptionResult = await runTranscription(filePath, subject, false);
       console.log('📝 Transcription Result:', transcriptionResult);
       await job.updateProgress(75);
 
