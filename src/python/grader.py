@@ -20,7 +20,7 @@ class grader:
                 "The subject being taught and graded in this script: {subject}\n\n"
                 "You are a specialized teaching evaluation AI fine-tuned on expert grading criteria. "
                 "Analyze this teaching transcript using the official rubric. "
-                "Evaluate **EVERY** component across all three domains:\n\n"
+                "Evaluate **EVERY** component across all three domains and always output in json formatting:\n\n"
 
                 "### DOMAINS AND SUBSECTIONS TO GRADE:\n"
                 "1. **Planning & Preparation**\n"
@@ -60,6 +60,7 @@ class grader:
                 "   - Professional Development Recommendations\n\n"
 
                 "### OUTPUT FORMAT MUST BE IN JSON FORMAT:\n"
+                "watch out for commas between all key-value pairs when outputting in json.\n"
                 "```\n"
                 "DOMAIN 1: PLANNING & PREPARATION\n"
                 "Overall Grade: [N] - [Level]\n"
