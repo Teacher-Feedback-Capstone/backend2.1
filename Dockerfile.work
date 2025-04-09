@@ -1,0 +1,60 @@
+# Choose a node image that also allows installing Python + dependencies
+FROM node:23-slim
+
+# ----------------------------
+# 1. Install system dependencies
+# ----------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-venv \
+    ffmpeg \
+    libsndfile1 \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ----------------------------
+# 2. Copy Node.js dependencies
+# ----------------------------
+COPY package*.json ./
+
+# Install node modules (BullMQ, AWS-SDK, ioredis, dotenv, etc.)
+RUN npm install
+
+# ----------------------------
+# 3. Copy Python dependencies & set up virtual env
+# ----------------------------
+# Place your requirements.txt under /app/src/python/
+COPY src/python/requirements.txt /app/src/python/
+
+# Create a virtual environment in /app/src/python/.venv
+RUN python3 -m venv /app/src/python/.venv \
+    && /app/src/python/.venv/bin/pip install --upgrade pip setuptools wheel \
+    && /app/src/python/.venv/bin/pip install -r /app/src/python/requirements.txt
+
+# ----------------------------
+# 4. Copy the entire codebase
+# ----------------------------
+COPY . .
+
+# ----------------------------
+# 5. Make sure the venv Python is in PATH
+# ----------------------------
+ENV PATH="/app/src/python/.venv/bin:$PATH"
+# Optionally, you might set PYTHONPATH if your code imports modules from src/python
+ENV PYTHONPATH="/app/src/python"
+
+# ----------------------------
+# 6. Expose any ports if needed
+# ----------------------------
+# Usually a Bull worker does not require external ports, 
+# but if you need them for debugging or a health check, you can:
+# EXPOSE 3000
+
+# ----------------------------
+# 7. Set up default command
+# ----------------------------
+# The worker logic is in "worker.js"; it also spawns the Python process
+CMD ["node", "worker.js"]
